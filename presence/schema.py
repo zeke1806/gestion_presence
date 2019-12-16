@@ -50,5 +50,5 @@ class Query(graphene.ObjectType):
     def resolve_groupeParticipants(self, info):
         return GroupeParticipant.objects.all()
 
-    def resolve_martieres(self, info):
+    def resolve_matieres(self, info):
         return Matiere.objects.all()
