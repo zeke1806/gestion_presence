@@ -38,6 +38,7 @@ class MatiereType(DjangoObjectType):
 
 # Query definition
 
+
 class Query(graphene.ObjectType):
     individus = graphene.List(IndividuType)
     categories = graphene.List(CategorieType)
