@@ -7,7 +7,7 @@ class Individu(models.Model):
     nom = models.CharField(max_length=255)
     prenom = models.CharField(max_length=255)
     cin = models.CharField(max_length=255, blank=True)
-    faceId = models.ImageField(upload_to="photos/")
+    face_id = models.ImageField(upload_to="photos/")
 
     def __str__(self):
         return "{0} {1}".format(self.nom, self.prenom)

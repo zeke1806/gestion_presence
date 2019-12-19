@@ -1,6 +1,9 @@
 import graphene
+import face_recognition
+import base64
 from graphene_django.types import DjangoObjectType
 from graphene_file_upload.scalars import Upload
+from django.core.files.base import ContentFile
 
 from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere
 
@@ -65,14 +68,52 @@ class Query(graphene.ObjectType):
 
 
 class CompareImage(graphene.Mutation):
-    success = graphene.Boolean()
+    """
+        1) Reception d'une image en base 64
+        2) Decoder l'image
+        3) Encoder l'image avec face_recognition
+        4) Recuperer la liste d'individus
+        5) Creer une liste d'image des individus encoder avec face_recognition
+        6) Comparer la liste d'image individus avec l'image recu
+        7) Boucler sur le resultat
+        8) Si une entree match, on me present a True, on break et on retourne present
+    """
+    present = graphene.Boolean()
 
     class Arguments:
         file = Upload(required=True)
 
     def mutate(self, info, file):
-        print(file)
-        return CompareImage(success=True)
+        present = False
+
+        file_format, imgstr = file["uri"].split(';base64,')
+        ext = file_format.split('/')[-1]
+        to_compare = ContentFile(base64.b64decode(imgstr),
+                                 name=file["name"] + "." + ext)
+        to_compare_encode = face_recognition.face_encodings(
+            face_recognition.load_image_file(to_compare))
+
+        if to_compare_encode:
+            to_compare_encode = to_compare_encode[0]
+        else:
+            raise Exception("Impossible de traiter l'image")
+
+        individus_image_encode = []
+        individus = Individu.objects.all()
+        for individu in individus:
+            encode_image = face_recognition.face_encodings(
+                face_recognition.load_image_file(individu.face_id))[0]
+            individus_image_encode.append(encode_image)
+
+        results = face_recognition.compare_faces(
+            individus_image_encode, to_compare_encode, tolerance=0.53)
+
+        for result in results:
+            if result:
+                present = True
+                break
+
+        return CompareImage(present=present)
 
 
 class Mutation(graphene.ObjectType):

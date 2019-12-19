@@ -13,7 +13,11 @@ class EvenementAdmin(admin.ModelAdmin):
     list_display = ('categorie', 'matiere')
 
 
-admin.site.register(Individu)
+class IndividuAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nom', 'prenom', 'face_id')
+
+
+admin.site.register(Individu, IndividuAdmin)
 admin.site.register(Responsable)
 admin.site.register(Etudiant, EtudiantAdmin)
 admin.site.register(GroupeParticipant)
