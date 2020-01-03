@@ -128,5 +128,46 @@ class CompareImage(graphene.Mutation):
         return CompareImage(present=present)
 
 
+class CreateEvent(graphene.Mutation):
+    evenement = graphene.Field(EvenementType)
+
+    class Arguments:
+        responsables = graphene.List(graphene.ID)
+        presences = graphene.List(graphene.ID)
+        groupe_participants = graphene.List(graphene.ID)
+        categorie = graphene.ID()
+        matiere = graphene.ID()
+        date_debut = graphene.DateTime()
+        date_fin = graphene.DateTime()
+
+    def mutate(self, info, responsables=None, presences=None, groupe_participants=None, categorie=None, matiere=None, date_debut=None, date_fin=None):
+        categorie = Categorie.objects.get(id=categorie)
+        evenement = Evenement.objects.create(categorie=categorie)
+
+        if matiere:
+            matiere = Matiere.objects.get(id=matiere)
+            evenement.matiere = matiere
+        if responsables:
+            for responsable in responsables:
+                responsable = Responsable.objects.get(id=responsable)
+                evenement.responsables.add(responsable)
+        if presences:
+            for etudiant in presences:
+                etudiant = Etudiant.objects.get(id=etudiant)
+                evenement.presences.add(etudiant)
+        if groupe_participants:
+            for groupe in groupe_participants:
+                groupe = GroupeParticipant.objects.get(id=groupe)
+                evenement.groupe_participants.add(groupe)
+        if date_debut:
+            evenement.date_debut = date_debut
+        if date_fin:
+            evenement.date_fin = date_fin
+
+        evenement.save()
+        return CreateEvent(evenement=evenement)
+
+
 class Mutation(graphene.ObjectType):
     compare_image = CompareImage.Field()
+    create_event = CreateEvent.Field()

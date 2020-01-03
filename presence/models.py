@@ -66,11 +66,14 @@ class Matiere(models.Model):
 class Evenement(models.Model):
     responsables = models.ManyToManyField(
         Responsable, related_name="evenements")
-    categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE)
-    matiere = models.ForeignKey(
-        Matiere, blank=True, null=True, on_delete=models.CASCADE)
     presences = models.ManyToManyField(
         Etudiant, related_name="evenements")
+    groupe_participants = models.ManyToManyField(
+        GroupeParticipant, related_name="evenements")
+    categorie = models.ForeignKey(
+        Categorie, on_delete=models.CASCADE, blank=True, null=True)
+    matiere = models.ForeignKey(
+        Matiere, blank=True, null=True, on_delete=models.CASCADE)
     date_debut = models.DateTimeField(blank=True, null=True)
     date_fin = models.DateTimeField(blank=True, null=True)
 
