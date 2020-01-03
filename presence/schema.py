@@ -39,7 +39,6 @@ class MatiereType(DjangoObjectType):
     class Meta:
         model = Matiere
 
-
 class EvenementType(DjangoObjectType):
     class Meta:
         model = Evenement
@@ -53,6 +52,8 @@ class Query(graphene.ObjectType):
     groupeParticipants = graphene.List(GroupeParticipantType)
     matieres = graphene.List(MatiereType)
     responsables = graphene.List(ResponsableType)
+    evenements = graphene.List(EvenementType)
+    etudiants = graphene.List(EtudiantType)
 
     def resolve_individus(self, info):
         return Individu.objects.all()
@@ -68,6 +69,12 @@ class Query(graphene.ObjectType):
 
     def resolve_responsables(self, info):
         return Responsable.objects.all()
+        
+    def resolve_evenements(self, info):
+        return Evenement.objects.all()
+
+    def resolve_etudiants(self, info):
+        return Etudiant.objects.all()
 
 # Mutation definition
 
