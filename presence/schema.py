@@ -121,47 +121,45 @@ class CompareImage(graphene.Mutation):
         return CompareImage(present=present)
 
 
-class SetEvent(graphene.Mutation):
-    event = graphene.Field(EvenementType)
+class CreateEvent(graphene.Mutation):
+    evenement = graphene.Field(EvenementType)
 
     class Arguments:
-        event_id = graphene.ID(required=False)
-        responsables_id = graphene.List(graphene.ID, required=False)
-        presences_id = graphene.List(graphene.ID, required=False)
-        groupe_participants_id = graphene.List(graphene.ID, required=False)
-        categorie_id = graphene.ID(required=False)
-        matiere_id = graphene.ID(required=False)
-        date_debut = graphene.Date(required=False)
-        date_fin = graphene.Date(required=False)
+        responsables = graphene.List(graphene.ID)
+        presences = graphene.List(graphene.ID)
+        groupe_participants = graphene.List(graphene.ID)
+        categorie = graphene.ID()
+        matiere = graphene.ID()
+        date_debut = graphene.DateTime()
+        date_fin = graphene.DateTime()
 
-    def mutate(self, info, event_id=None, responsables_id=None,
-               presences_id=None, groupe_participants_id=None, categorie_id=None, matiere_id=None,
-               date_debut=None, date_fin=None):
-        if event_id:
-            evenement = Evenement.objects.get(id=event_id)
-        else:
-            evenement = Evenement.objects.create()
-        if responsables_id:
-            for identifiant in responsables_id:
-                evenement.responsables.add(
-                    Responsable.objects.get(id=identifiant))
-        if presences_id:
-            for identifiant in presences_id:
-                evenement.presences.add(Etudiant.objects.get(id=identifiant))
-        if groupe_participants_id:
-            for identifiant in groupe_participants_id:
-                evenement.groupe_participants_id(
-                    GroupeParticipant.objects.get(id=identifiant))
-        if categorie_id:
-            evenement.categorie = Categorie.objects.get(id=categorie_id)
-        if matiere_id:
-            evenement.matiere = Matiere.objects.get(id=matiere_id)
+    def mutate(self, info, responsables=None, presences=None, groupe_participants=None, categorie=None, matiere=None, date_debut=None, date_fin=None):
+        categorie = Categorie.objects.get(id=categorie)
+        matiere = Matiere.objects.get(id=matiere)
+        evenement = Evenement.objects.create(
+            matiere=matiere, categorie=categorie)
+
+        if responsables:
+            for responsable in responsables:
+                responsable = Responsable.objects.get(id=responsable)
+                evenement.responsables.add(responsable)
+        if presences:
+            for etudiant in presences:
+                etudiant = Etudiant.objects.get(id=etudiant)
+                evenement.presences.add(etudiant)
+        if groupe_participants:
+            for groupe in groupe_participants:
+                groupe = GroupeParticipant.objects.get(id=groupe)
+                evenement.groupe_participants.add(groupe)
         if date_debut:
-            evenement.date
+            evenement.date_debut = date_debut
+        if date_fin:
+            evenement.date_fin = date_fin
+
         evenement.save()
-        return SetEvent(event=evenement)
+        return CreateEvent(evenement=evenement)
 
 
 class Mutation(graphene.ObjectType):
     compare_image = CompareImage.Field()
-    set_event = SetEvent.Field()
+    create_event = CreateEvent.Field()
