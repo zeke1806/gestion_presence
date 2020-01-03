@@ -5,7 +5,7 @@ from graphene_django.types import DjangoObjectType
 from graphene_file_upload.scalars import Upload
 from django.core.files.base import ContentFile
 
-from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere
+from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere, Evenement
 
 # Type definition
 
@@ -38,6 +38,11 @@ class GroupeParticipantType(DjangoObjectType):
 class MatiereType(DjangoObjectType):
     class Meta:
         model = Matiere
+
+
+class EvenementType(DjangoObjectType):
+    class Meta:
+        model = Evenement
 
 # Query definition
 
@@ -116,5 +121,47 @@ class CompareImage(graphene.Mutation):
         return CompareImage(present=present)
 
 
+class SetEvent(graphene.Mutation):
+    event = graphene.Field(EvenementType)
+
+    class Arguments:
+        event_id = graphene.ID(required=False)
+        responsables_id = graphene.List(graphene.ID, required=False)
+        presences_id = graphene.List(graphene.ID, required=False)
+        groupe_participants_id = graphene.List(graphene.ID, required=False)
+        categorie_id = graphene.ID(required=False)
+        matiere_id = graphene.ID(required=False)
+        date_debut = graphene.Date(required=False)
+        date_fin = graphene.Date(required=False)
+
+    def mutate(self, info, event_id=None, responsables_id=None,
+               presences_id=None, groupe_participants_id=None, categorie_id=None, matiere_id=None,
+               date_debut=None, date_fin=None):
+        if event_id:
+            evenement = Evenement.objects.get(id=event_id)
+        else:
+            evenement = Evenement.objects.create()
+        if responsables_id:
+            for identifiant in responsables_id:
+                evenement.responsables.add(
+                    Responsable.objects.get(id=identifiant))
+        if presences_id:
+            for identifiant in presences_id:
+                evenement.presences.add(Etudiant.objects.get(id=identifiant))
+        if groupe_participants_id:
+            for identifiant in groupe_participants_id:
+                evenement.groupe_participants_id(
+                    GroupeParticipant.objects.get(id=identifiant))
+        if categorie_id:
+            evenement.categorie = Categorie.objects.get(id=categorie_id)
+        if matiere_id:
+            evenement.matiere = Matiere.objects.get(id=matiere_id)
+        if date_debut:
+            evenement.date
+        evenement.save()
+        return SetEvent(event=evenement)
+
+
 class Mutation(graphene.ObjectType):
     compare_image = CompareImage.Field()
+    set_event = SetEvent.Field()

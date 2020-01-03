@@ -17,11 +17,19 @@ class IndividuAdmin(admin.ModelAdmin):
     list_display = ('id', 'nom', 'prenom', 'face_id')
 
 
+class CategorieAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nom_categorie')
+
+
+class ResponsableAdmin(admin.ModelAdmin):
+    list_display = ('id', 'individu')
+
+
 admin.site.register(Individu, IndividuAdmin)
-admin.site.register(Responsable)
+admin.site.register(Responsable, ResponsableAdmin)
 admin.site.register(Etudiant, EtudiantAdmin)
 admin.site.register(GroupeParticipant)
 admin.site.register(Appartenir)
-admin.site.register(Categorie)
+admin.site.register(Categorie, CategorieAdmin)
 admin.site.register(Matiere)
 admin.site.register(Evenement, EvenementAdmin)
