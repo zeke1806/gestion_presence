@@ -67,7 +67,7 @@ class Evenement(models.Model):
     responsables = models.ManyToManyField(
         Responsable, related_name="evenements")
     presences = models.ManyToManyField(
-        Etudiant, related_name="evenements")
+        Etudiant, related_name="evenements", blank=True, null=True)
     groupe_participants = models.ManyToManyField(
         GroupeParticipant, related_name="evenements")
     categorie = models.ForeignKey(
