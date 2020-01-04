@@ -10,7 +10,7 @@ class EtudiantAdmin(admin.ModelAdmin):
 
 
 class EvenementAdmin(admin.ModelAdmin):
-    list_display = ('categorie', 'matiere')
+    list_display = ('id', 'categorie', 'matiere')
 
 
 class IndividuAdmin(admin.ModelAdmin):
