@@ -55,6 +55,8 @@ class Query(graphene.ObjectType):
     responsables = graphene.List(ResponsableType)
     evenements = graphene.List(EvenementType)
     etudiants = graphene.List(EtudiantType)
+    gp_members = graphene.List(
+        EtudiantType, gp_id=graphene.ID(required=True))
 
     def resolve_individus(self, info):
         return Individu.objects.all()
@@ -76,6 +78,10 @@ class Query(graphene.ObjectType):
 
     def resolve_etudiants(self, info):
         return Etudiant.objects.all()
+
+    def resolve_gp_members(self, info, gp_id=None):
+        gp = GroupeParticipant.objects.get(id=gp_id)
+        return gp.membres.all()
 
 # Mutation definition
 
