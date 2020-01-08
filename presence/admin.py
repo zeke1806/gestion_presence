@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Individu, Responsable, Etudiant, GroupeParticipant, Appartenir, Categorie, Matiere, Evenement
+from .models import Individu, Responsable, Etudiant, GroupeParticipant, Appartenir, Categorie, Matiere, Evenement, Photo
 
 # Register your models here.
 
@@ -41,3 +41,4 @@ admin.site.register(Appartenir)
 admin.site.register(Categorie, CategorieAdmin)
 admin.site.register(Matiere, MatiereAdmin)
 admin.site.register(Evenement, EvenementAdmin)
+admin.site.register(Photo)

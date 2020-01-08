@@ -5,8 +5,10 @@ from graphene_django.types import DjangoObjectType
 from graphene_file_upload.scalars import Upload
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from django.core.files import File
+from django.db.models import ImageField
 
-from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere, Evenement
+from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere, Evenement, Photo
 
 # Type definition
 
@@ -110,15 +112,14 @@ class CompareImage(graphene.Mutation):
     def mutate(self, info, file):
         present = False
 
-        file_format, imgstr = file["uri"].split(';base64,')
-        ext = file_format.split('/')[-1]
-        to_compare = ContentFile(base64.b64decode(imgstr),
-                                 name=file["name"] + "." + ext)
+        photo = Photo.objects.create(photo=file)
+
+        to_compare = photo.photo
         to_compare_encode = face_recognition.face_encodings(
             face_recognition.load_image_file(to_compare))
-
         if to_compare_encode:
             to_compare_encode = to_compare_encode[0]
+            print("possible de traiter")
         else:
             raise Exception("Impossible de traiter l'image")
 
