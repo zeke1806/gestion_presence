@@ -4,6 +4,7 @@ import base64
 from graphene_django.types import DjangoObjectType
 from graphene_file_upload.scalars import Upload
 from django.core.files.base import ContentFile
+from django.utils import timezone
 
 from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere, Evenement
 
@@ -57,6 +58,7 @@ class Query(graphene.ObjectType):
     etudiants = graphene.List(EtudiantType)
     gp_members = graphene.List(
         EtudiantType, gp_id=graphene.ID(required=True))
+    evenement = graphene.Field(EvenementType, idEvent=graphene.ID())
 
     def resolve_individus(self, info):
         return Individu.objects.all()
@@ -82,6 +84,9 @@ class Query(graphene.ObjectType):
     def resolve_gp_members(self, info, gp_id=None):
         gp = GroupeParticipant.objects.get(id=gp_id)
         return gp.membres.all()
+
+    def resolve_evenement(self, info, idEvent):
+        return Evenement.objects.get(id=idEvent)
 
 # Mutation definition
 
@@ -187,8 +192,9 @@ class SetEvent(graphene.Mutation):
         matiere = graphene.ID()
         date_debut = graphene.DateTime()
         date_fin = graphene.DateTime()
+        cancel = graphene.Boolean()
 
-    def mutate(self, info, id_event, responsables=None, presences=None, groupe_participants=None, categorie=None, matiere=None, date_debut=None, date_fin=None):
+    def mutate(self, info, id_event, responsables=None, presences=None, groupe_participants=None, categorie=None, matiere=None, date_debut=None, date_fin=None, cancel=None):
         # Pour les listes (principe de mutation)
         # On recoit une liste d'id d'entree
         # On supprime d'abord toute les entrees et on remplaces juste
@@ -217,9 +223,11 @@ class SetEvent(graphene.Mutation):
             matiere = Matiere.objects.get(id=matiere)
             evenement.matiere = matiere
         if date_debut:
-            evenement.date_debut = date_debut
+            evenement.date_debut = timezone.localtime(date_debut)
         if date_fin:
-            evenement.date_fin = date_fin
+            evenement.date_fin = timezone.localtime(date_debut)
+        if cancel:
+            evenement.date_debut = None
 
         evenement.save()
         return SetEvent(evenement=evenement)
