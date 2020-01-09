@@ -98,7 +98,7 @@ class Query(graphene.ObjectType):
 class CompareImage(graphene.Mutation):
     """
         1) Reception d'une image en base 64
-        2) Decoder l'image
+        2) Preparation image avant encodage
         3) Encoder l'image avec face_recognition
         4) Recuperer la liste d'individus
         5) Creer une liste d'image des individus encoder avec face_recognition
@@ -110,10 +110,13 @@ class CompareImage(graphene.Mutation):
 
     class Arguments:
         file = Upload(required=True)
+        event_id = graphene.ID(required=True)
 
-    def mutate(self, info, file):
+    def mutate(self, info, file, event_id):
         present = False
         blob = BytesIO()
+        event = Evenement.objects.get(id=event_id)
+        gp = event.groupe_participants.all()[0]
 
         pil_img = rotate_image(file)
         pil_img.save(blob, "JPEG")
@@ -128,10 +131,10 @@ class CompareImage(graphene.Mutation):
             raise Exception("Impossible de traiter l'image")
 
         individus_image_encode = []
-        individus = Individu.objects.all()
+        individus = gp.membres.all()
         for individu in individus:
             encode_image = face_recognition.face_encodings(
-                face_recognition.load_image_file(individu.face_id))[0]
+                face_recognition.load_image_file(individu.individu.face_id))[0]
             individus_image_encode.append(encode_image)
 
         results = face_recognition.compare_faces(
@@ -140,9 +143,10 @@ class CompareImage(graphene.Mutation):
         for result in results:
             print(result)
 
-        for result in results:
+        for key, result in enumerate(results):
             if result:
                 present = True
+                event.presences.add(individus[key])
                 break
 
         return CompareImage(present=present)
