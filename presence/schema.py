@@ -7,8 +7,10 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.core.files import File
 from django.db.models import ImageField
+from io import BytesIO
 
-from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere, Evenement, Photo
+from .models import Individu, Etudiant, Categorie, Responsable, GroupeParticipant, Matiere, Evenement
+from .utils import rotate_image
 
 # Type definition
 
@@ -111,15 +113,17 @@ class CompareImage(graphene.Mutation):
 
     def mutate(self, info, file):
         present = False
+        blob = BytesIO()
 
-        photo = Photo.objects.create(photo=file)
+        pil_img = rotate_image(file)
+        pil_img.save(blob, "JPEG")
 
-        to_compare = photo.photo
+        to_compare = File(blob)
         to_compare_encode = face_recognition.face_encodings(
             face_recognition.load_image_file(to_compare))
         if to_compare_encode:
+            print("encodage effectuee...")
             to_compare_encode = to_compare_encode[0]
-            print("possible de traiter")
         else:
             raise Exception("Impossible de traiter l'image")
 
@@ -132,6 +136,9 @@ class CompareImage(graphene.Mutation):
 
         results = face_recognition.compare_faces(
             individus_image_encode, to_compare_encode, tolerance=0.53)
+
+        for result in results:
+            print(result)
 
         for result in results:
             if result:
