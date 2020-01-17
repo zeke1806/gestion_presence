@@ -108,6 +108,8 @@ class CompareImage(graphene.Mutation):
         8) Si une entree match, on me present a True, on break et on retourne present
     """
     present = graphene.Boolean()
+    etudiant = graphene.Field(EtudiantType)
+    date_fin = graphene.DateTime()
 
     class Arguments:
         file = Upload(required=True)
@@ -115,6 +117,9 @@ class CompareImage(graphene.Mutation):
 
     def mutate(self, info, file, event_id):
         present = False
+        date_fin = None
+        etudiant = None
+
         blob = BytesIO()
         event = Evenement.objects.get(id=event_id)
         gp = event.groupe_participants.all()
@@ -148,12 +153,13 @@ class CompareImage(graphene.Mutation):
             individus_image_encode, to_compare_encode, tolerance=0.53)
 
         for result in results:
-            print("etudiant ",result)
+            print("etudiant ", result)
 
         for key, result in enumerate(results):
             if result:
                 present = True
                 event.presences.add(individus[key])
+                etudiant = individus[key]
                 break
 
         responsables_image_encode = []
@@ -170,12 +176,14 @@ class CompareImage(graphene.Mutation):
                             
         for key, result in enumerate(resultsRes):
             if result:
+                present = True
                 print(datetime.datetime.now())
-                event.date_fin = datetime.datetime.now()
+                date_fin = datetime.datetime.now()
+                #event.date_fin = datetime.datetime.now()
                 event.save()
                 break
 
-        return CompareImage(present=present)
+        return CompareImage(present=present, etudiant=etudiant, date_fin=date_fin)
 
 
 class CreateEvent(graphene.Mutation):
