@@ -108,6 +108,8 @@ class CompareImage(graphene.Mutation):
         8) Si une entree match, on me present a True, on break et on retourne present
     """
     present = graphene.Boolean()
+    etudiant = graphene.Field(EtudiantType)
+    date_fin = graphene.DateTime()
 
     class Arguments:
         file = Upload(required=True)
@@ -115,11 +117,14 @@ class CompareImage(graphene.Mutation):
 
     def mutate(self, info, file, event_id):
         present = False
+        date_fin = None
+        etudiant = None
+
         blob = BytesIO()
         event = Evenement.objects.get(id=event_id)
         gp = event.groupe_participants.all()[0]
         res = event.responsables.all()
-        
+
         pil_img = rotate_image(file)
         pil_img.save(blob, "JPEG")
 
@@ -144,15 +149,16 @@ class CompareImage(graphene.Mutation):
             individus_image_encode, to_compare_encode, tolerance=0.53)
 
         for result in results:
-            print("etudiant ",result)
+            print("etudiant ", result)
 
         for key, result in enumerate(results):
             if result:
                 present = True
                 event.presences.add(individus[key])
+                etudiant = individus[key]
                 break
 
-        if result != True :
+        if result != True:
             for individu in res:
                 encode_image = face_recognition.face_encodings(
                     face_recognition.load_image_file(individu.individu.face_id))[0]
@@ -161,13 +167,15 @@ class CompareImage(graphene.Mutation):
             resultsRes = face_recognition.compare_faces(
                 individus_image_encode, to_compare_encode, tolerance=0.53)
             for result in resultsRes:
-                print("responsable ",result)
-                
-            event.date_fin = datetime.datetime.now()
+                print("responsable ", result)
+
+            present = True
+            date_fin = datetime.datetime.now()
+            # event.date_fin = date_fin
             print(datetime.datetime.now())
             event.save()
 
-        return CompareImage(present=present)
+        return CompareImage(present=present, etudiant=etudiant, date_fin=date_fin)
 
 
 class CreateEvent(graphene.Mutation):
