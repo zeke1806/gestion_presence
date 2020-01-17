@@ -117,9 +117,9 @@ class CompareImage(graphene.Mutation):
         present = False
         blob = BytesIO()
         event = Evenement.objects.get(id=event_id)
-        gp = event.groupe_participants.all()[0]
-        res = event.responsables.all()
-        
+        gp = event.groupe_participants.all()
+        responsables = event.responsables.all()
+
         pil_img = rotate_image(file)
         pil_img.save(blob, "JPEG")
 
@@ -133,7 +133,11 @@ class CompareImage(graphene.Mutation):
             raise Exception("Impossible de traiter l'image")
 
         individus_image_encode = []
-        individus = gp.membres.all()
+        individus = []
+
+        for elem in gp:
+            a = elem.membres.all()
+            individus.extend(a) 
 
         for individu in individus:
             encode_image = face_recognition.face_encodings(
@@ -152,20 +156,24 @@ class CompareImage(graphene.Mutation):
                 event.presences.add(individus[key])
                 break
 
-        if result != True :
-            for individu in res:
-                encode_image = face_recognition.face_encodings(
-                    face_recognition.load_image_file(individu.individu.face_id))[0]
-                individus_image_encode.append(encode_image)
+        responsables_image_encode = []
+        
+        for responsable in responsables:
+            encode_image = face_recognition.face_encodings(
+                face_recognition.load_image_file(responsable.individu.face_id))[0]
+            responsables_image_encode.append(encode_image)
 
             resultsRes = face_recognition.compare_faces(
-                individus_image_encode, to_compare_encode, tolerance=0.53)
-            for result in resultsRes:
-                print("responsable ",result)
-                
-            event.date_fin = datetime.datetime.now()
-            print(datetime.datetime.now())
-            event.save()
+                responsables_image_encode, to_compare_encode, tolerance=0.53)
+        for result in resultsRes:
+            print("responsable ",result)
+                            
+        for key, result in enumerate(resultsRes):
+            if result:
+                print(datetime.datetime.now())
+                event.date_fin = datetime.datetime.now()
+                event.save()
+                break
 
         return CompareImage(present=present)
 
