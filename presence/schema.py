@@ -142,7 +142,7 @@ class CompareImage(graphene.Mutation):
 
         for elem in gp:
             a = elem.membres.all()
-            individus.extend(a) 
+            individus.extend(a)
 
         for individu in individus:
             encode_image = face_recognition.face_encodings(
@@ -163,7 +163,7 @@ class CompareImage(graphene.Mutation):
                 break
 
         responsables_image_encode = []
-        
+
         for responsable in responsables:
             encode_image = face_recognition.face_encodings(
                 face_recognition.load_image_file(responsable.individu.face_id))[0]
@@ -172,8 +172,8 @@ class CompareImage(graphene.Mutation):
             resultsRes = face_recognition.compare_faces(
                 responsables_image_encode, to_compare_encode, tolerance=0.53)
         for result in resultsRes:
-            print("responsable ",result)
-                            
+            print("responsable ", result)
+
         for key, result in enumerate(resultsRes):
             if result:
                 present = True
@@ -239,8 +239,9 @@ class SetEvent(graphene.Mutation):
         date_debut = graphene.DateTime()
         date_fin = graphene.DateTime()
         cancel = graphene.Boolean()
+        reset_presence = graphene.Boolean()
 
-    def mutate(self, info, id_event, responsables=None, presences=None, groupe_participants=None, categorie=None, matiere=None, date_debut=None, date_fin=None, cancel=None):
+    def mutate(self, info, id_event, responsables=None, presences=None, groupe_participants=None, categorie=None, matiere=None, date_debut=None, date_fin=None, cancel=None, reset_presence=None):
         # Pour les listes (principe de mutation)
         # On recoit une liste d'id d'entree
         # On supprime d'abord toute les entrees et on remplaces juste
@@ -274,6 +275,8 @@ class SetEvent(graphene.Mutation):
             evenement.date_fin = timezone.localtime(date_debut)
         if cancel:
             evenement.date_debut = None
+        if reset_presence:
+            evenement.presences.clear()
 
         evenement.save()
         return SetEvent(evenement=evenement)
