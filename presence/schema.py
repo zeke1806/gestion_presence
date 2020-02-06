@@ -109,7 +109,7 @@ class CompareImage(graphene.Mutation):
     """
     present = graphene.Boolean()
     etudiant = graphene.Field(EtudiantType)
-    date_fin = graphene.DateTime()
+    presentResponsable = graphene.Boolean()
 
     class Arguments:
         file = Upload(required=True)
@@ -117,7 +117,7 @@ class CompareImage(graphene.Mutation):
 
     def mutate(self, info, file, event_id):
         present = False
-        date_fin = None
+        presentResponsable = False
         etudiant = None
 
         blob = BytesIO()
@@ -177,14 +177,31 @@ class CompareImage(graphene.Mutation):
         for key, result in enumerate(resultsRes):
             if result:
                 present = True
-                print(datetime.datetime.now())
-                date_fin = datetime.datetime.now()
-                #event.date_fin = datetime.datetime.now()
-                event.save()
+                presentResponsable = True
                 break
 
-        return CompareImage(present=present, etudiant=etudiant, date_fin=date_fin)
+        return CompareImage(present=present, etudiant=etudiant,presentResponsable=presentResponsable )
 
+class FinishPresence(graphene.Mutation):
+    date_fin = graphene.DateTime()
+    ok = graphene.Boolean()
+
+    class Arguments:
+        mdp = graphene.String()
+        event_id = graphene.ID(required=True)
+
+    def mutate(self,info, mdp=None, event_id=None):
+        ok = False
+        date_fin = None
+        event = Evenement.objects.get(id=event_id)
+        responsables = event.responsables.all()[0]
+        if responsables.password == mdp :
+            date_fin = datetime.datetime.now()
+            event.date_fin = datetime.datetime.now()
+            event.save()
+            ok = True
+        
+        return FinishPresence(date_fin = date_fin, ok = ok )            
 
 class CreateEvent(graphene.Mutation):
     evenement = graphene.Field(EvenementType)
@@ -286,3 +303,5 @@ class Mutation(graphene.ObjectType):
     compare_image = CompareImage.Field()
     create_event = CreateEvent.Field()
     set_event = SetEvent.Field()
+    finish_presence = FinishPresence.Field()
+ 

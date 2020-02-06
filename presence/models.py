@@ -16,6 +16,7 @@ class Individu(models.Model):
 class Responsable(models.Model):
     individu = models.OneToOneField(Individu, on_delete=models.CASCADE)
     code_responsable = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
 
     def __str__(self):
         return "{0} {1}".format(self.individu.nom, self.individu.prenom)
